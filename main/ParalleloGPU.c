@@ -30,7 +30,6 @@ int main(int argc, char *argv[]){
     p_r = atoi(argv[4]);
     p_c = atoi(argv[5]);
     kernel = atoi(argv[6]);
-//    printf("KERNEL SCELTO %d\n", kernel);
 
     MPI_Init(&argc,&argv);
     
