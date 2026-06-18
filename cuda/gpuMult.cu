@@ -1,12 +1,9 @@
-#include <iostream> // STAMPO A SCHERMO
+#include <iostream> 
 #include <math.h>
-#include <cuda_runtime.h>   //for CUDA runtime API, API DI BASE
-
-#define TILE_SIZE 32
-#define TILE_K 32  // tile lungo la dimensione M
+#include <cuda_runtime.h>  
 
 __global__ void firstNoShared(float* A, float* X, float* Y, int m, int n, int k) {
-    // Coordinate globali del thread
+    //Coordinate globali del thread
     int row = blockIdx.y * blockDim.y + threadIdx.y;
     int col = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -21,7 +18,7 @@ __global__ void firstNoShared(float* A, float* X, float* Y, int m, int n, int k)
     }
 }
 
-// Kernel CUDA con shared memory
+//Kernel CUDA con shared memory
 __global__ void firstShared(float* A, float* X, float* Y, int m, int n, int k, int tileSize){
 
     extern __shared__ float shared[];
@@ -37,14 +34,12 @@ __global__ void firstShared(float* A, float* X, float* Y, int m, int n, int k, i
 
     float sum = 0.0f;
 
-    // Numero di tile
+    //Numero di tile
     int numTiles = (n + tileSize - 1) / tileSize;
 
     for (int t = 0; t < numTiles; t++) {
 
-        // =========================
-        // Caricamento tile di A
-        // =========================
+        //Caricamento tile di A
         int tiledColA = t * tileSize + tx;
 
         if (row < m && tiledColA < n)
@@ -81,14 +76,14 @@ __global__ void firstShared(float* A, float* X, float* Y, int m, int n, int k, i
 }
 
 
-// Kernel CUDA: 1 thread = 1 riga di C
+//Kernel CUDA: 1 thread = 1 riga di C
 __global__ void secondNoShared(float* A, float* X, float* Y, int m, int n, int k) {
-    // Ogni thread gestisce una riga specifica di Y
+    //Ogni thread gestisce una riga specifica di Y
     int row = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (row < m) {
-        // Allocazione dinamica basata sul parametro 'k' effettivo per evitare register spilling
-        // Sfruttiamo i registri per le colonne del multivettore (k <= 32)
+        //Allocazione dinamica basata sul parametro 'k' effettivo per evitare register spilling
+        //Sfruttiamo i registri per le colonne del multivettore (k <= 32)
         float sum[32]; 
         
         #pragma unroll
@@ -96,20 +91,20 @@ __global__ void secondNoShared(float* A, float* X, float* Y, int m, int n, int k
             sum[j] = 0.0f;
         }
 
-        // Loop sulla dimensione interna (colonne di A / righe di X)
-        // Questo ciclo permette l'accesso coalescente ad A da parte del warp
+        //Loop sulla dimensione interna (colonne di A / righe di X)
+        //Questo ciclo permette l'accesso coalescente ad A da parte del warp
         for (int i = 0; i < n; i++) {
-            // COALESCED ACCESS: Thread adiacenti caricano elementi adiacenti sulla stessa colonna 'i'
+            //COALESCED ACCESS: Thread adiacenti caricano elementi adiacenti sulla stessa colonna 'i'
             float a_val = A[row * n + i];
 
-            // Aggiorna gli accumulatori per tutte le k colonne del multivettore
+            //Aggiorna gli accumulatori per tutte le k colonne del multivettore
             #pragma unroll
             for (int j = 0; j < k; j++) {
                 sum[j] += a_val * X[i * k + j];
             }
         }
 
-        // Scrittura finale dei risultati in modo lineare
+        //Scrittura finale dei risultati in modo lineare
         #pragma unroll
         for (int j = 0; j < k; j++) {
             Y[row * k + j] = sum[j];
