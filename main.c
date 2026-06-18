@@ -30,7 +30,6 @@ int main(int argc, char *argv[]){
     p_r = atoi(argv[4]);
     p_c = atoi(argv[5]);
     kernel = atoi(argv[6]);
-//    printf("KERNEL SCELTO %d\n", kernel);
 
     MPI_Init(&argc,&argv);
     
@@ -49,9 +48,8 @@ int main(int argc, char *argv[]){
 
 
     int dims[2] = {p_r, p_c};
-   // MPI_Dims_create(size, 2, dims);
  
-    int periods[2] = {0, 0}; // griglia NON periodica, non periodico significa che la prima riga non è vicina all'ultima (è un segmento, non un cerchio dove l'ultimo elemento si ricollega al primo)
+    int periods[2] = {0, 0};
     int reorder = 0;          // MPI può riordinare i rank per ottimizzare
     MPI_Comm cart_comm;       // nuovo communicator cartesiano
     
@@ -63,13 +61,11 @@ int main(int argc, char *argv[]){
 
     MPI_Cart_coords(cart_comm, cart_rank, 2, coords); //è l'equivalente di MPI_Comm_rank per le coordinate cartesiane
     
-  //  printf("Rank %d ha coordinate [%d,%d]\n", rank, coords[0], coords[1]);
     
    
     if(rank == 0){
  
         int z=0;
-    //    printf("M vale: %d, N vale:%d, K vale: %d\n", m, n, k);
 
         Y_serial = calloc(m*k, sizeof(float));
 
