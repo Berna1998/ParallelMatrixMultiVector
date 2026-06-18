@@ -25,7 +25,7 @@ void save_results_to_csv(const char *filename, int M, int N, int K, int kernel, 
         return;
     }
 
-    // Header se file vuoto
+    //Header se file vuoto
     fseek(file, 0, SEEK_END);
     if (ftell(file) == 0) {
         fprintf(file, "M,N,K,Kernel,Threads,PR,PC,SerialTime(s),AvgTime(s),FLOPS,Speedup,Error\n");
@@ -52,7 +52,7 @@ double calculate_performance(float* A, float* X, int m, int n, int k, float* Y) 
 
                
     float* tmp = calloc(m*k, sizeof(float));
-    // Warm-up 
+    //Warm-up 
     prodotto_seriale(A, X, m, n, k, tmp);
     free(tmp);
 
@@ -67,7 +67,6 @@ double calculate_performance(float* A, float* X, int m, int n, int k, float* Y) 
         diff_time = end_time - start_time;
         times[i] = diff_time;
         total_time += diff_time;
-//        printf("Run %d tempo: %f\n", i + 1, diff_time);
        
     }
     
@@ -83,12 +82,6 @@ double calculate_performance(float* A, float* X, int m, int n, int k, float* Y) 
     } else {
         flops = 0.0;
     }
-    //errore, speedup, efficienza
-    
- //   printf("\nTempo medio: %f s\n", avg_time);
-  //  printf("FLOPS: %e\n", flops);
-    
- //   save_results_to_csv("results.csv", m, n, k, 1, avg_time, flops, best_time ); //1 è numero thread, poi se modifica
 
     return avg_time;
 }
