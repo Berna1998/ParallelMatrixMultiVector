@@ -154,7 +154,7 @@ __global__ void secondShared(float* A, float* X, float* Y, int m, int n, int k, 
             for (int i = 0; i < tileK; i++) {
                 int k_idx = t * tileK + i;
                 if (k_idx < n) {
-                    // Accesso coalescente alla memoria globale per la matrice A
+                    //Accesso coalescente alla memoria globale per la matrice A
                     float a_val = A[row * n + k_idx];
 
                     #pragma unroll
