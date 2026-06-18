@@ -361,11 +361,6 @@ int main(int argc, char *argv[]){
          printf("\n");
        }
     }
-*/
-/* ============================= */
-/* PULIZIA MEMORIA               */
-/* ============================= */
-
     free(A_local);
     free(X_local);
     free(Y_local);
@@ -384,9 +379,6 @@ int main(int argc, char *argv[]){
     cudaFree(d_A);
     cudaFree(d_X);
     cudaFree(d_Y);
-
-   // cudaEventDestroy(s);
-  //  cudaEventDestroy(e);
 
     MPI_Finalize();
     return 0;
