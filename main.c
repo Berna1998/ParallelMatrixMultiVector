@@ -95,19 +95,12 @@ int main(int argc, char *argv[]){
     if(coords[1] == dims[1]-1){
        N_local += n % dims[1];
     }
-  //  printf("Rank %d (coords [%d,%d]) ha blocco locale %d x %d da [%d,%d]\n", rank, coords[0], coords[1], M_local, N_local, row_start, col_start);
 
-/* ============================= */
-/* NUOVA PARTE CORRETTA 2D       */
-/* ============================= */
-
-/* comunicatori di riga e colonna */
-    MPI_Comm row_comm, col_comm;
+    MPI_Comm row_comm, col_comm; //comunicatori di riga e di colonna
 
     MPI_Comm_split(cart_comm, coords[0], coords[1], &row_comm);
     MPI_Comm_split(cart_comm, coords[1], coords[0], &col_comm);
 
-/* allocazioni corrette */
     float* A_local = malloc(M_local * N_local * sizeof(float));
     float* X_local = malloc(N_local * k * sizeof(float));
     float* Y_local = calloc(M_local * k, sizeof(float));
@@ -123,10 +116,7 @@ int main(int argc, char *argv[]){
     cudaMalloc((void**)&d_X, sizeX);
     cudaMalloc((void**)&d_Y, sizeY);
 
-/* ============================= */
-/* DISTRIBUZIONE MATRICE A (2D)  */
-/* ============================= */
-
+    //Qui inizia la distribuzione della matrice A
     if(rank == 0){
 
        for(int p = 0; p < size; p++){
