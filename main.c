@@ -235,25 +235,13 @@ int main(int argc, char *argv[]){
          MPI_Barrier(cart_comm);
          double start = MPI_Wtime();
 
-         /* EVENT TIMING CUDA 
-          cudaEvent_t s, e;
-         cudaEventCreate(&s);
-         cudaEventCreate(&e);
-
-         cudaEventRecord(s);*/
-         //CHIAMO GPU
+         //Invocazione al kernel GPU
          run_kernel(d_A, d_X, d_Y, M_local, N_local, k, kernel, block);
          
          cudaDeviceSynchronize();
          MPI_Barrier(cart_comm);
          double local = MPI_Wtime() - start;
 
-       //  cudaEventRecord(e);
-       //  cudaEventSynchronize(e);
-
-       //  float gpu_ms = 0;
-      //   cudaEventElapsedTime(&gpu_ms, s, e);
-      
          double global_max;
          MPI_Reduce(&local, &global_max, 1, MPI_DOUBLE, MPI_MAX, 0, cart_comm);
 
@@ -262,13 +250,9 @@ int main(int argc, char *argv[]){
       }
     }
     
-      /* COPY D2H */
     cudaMemcpy(Y_local, d_Y, sizeY, cudaMemcpyDeviceToHost);
     
-/* ============================= */
-/* RIDUZIONE LUNGO LE RIGHE      */
-/* ============================= */
-
+    //riduzione lungo le righe 
     float* Y_row = NULL;
 
     if(coords[1] == 0){
@@ -276,14 +260,10 @@ int main(int argc, char *argv[]){
     }
     MPI_Reduce(Y_local, Y_row, M_local * k,MPI_FLOAT, MPI_SUM,0,row_comm);
 
-/* ============================= */
-/* RACCOLTA FINALE CON GATHERV   */
-/* ============================= */
-
+    //da qui inizia la raccolta finale con Gatherv
     float* Y = NULL;
 
-/* communicator della prima colonna */
-    MPI_Comm first_col_comm;
+    MPI_Comm first_col_comm;//comunicatore della prima colonna
 
     if(coords[1] == 0){
       MPI_Comm_split(cart_comm, 0, coords[0], &first_col_comm);
@@ -291,8 +271,7 @@ int main(int argc, char *argv[]){
       MPI_Comm_split(cart_comm, MPI_UNDEFINED, coords[0], &first_col_comm);
     }
 
-/* solo i processi della prima colonna partecipano */
-    if(coords[1] == 0){
+    if(coords[1] == 0){//partecipano solo i processi della prima colonna
 
       int *recvcounts = NULL;
       int *displs = NULL;
@@ -300,8 +279,7 @@ int main(int argc, char *argv[]){
       int col_rank;
       MPI_Comm_rank(first_col_comm, &col_rank);
 
-    /* root della prima colonna */
-      if(col_rank == 0){
+      if(col_rank == 0){//root della prima colonna
 
         Y = malloc(m * k * sizeof(float));
 
@@ -326,14 +304,14 @@ int main(int argc, char *argv[]){
       }
 
       MPI_Gatherv(
-        Y_row,                 /* send buffer */
-        M_local * k,           /* send count */
+        Y_row,                 
+        M_local * k,           
         MPI_FLOAT,
-        Y,                     /* recv buffer */
+        Y,                     
         recvcounts,
         displs,
         MPI_FLOAT,
-        0,                     /* root nel communicator */
+        0,                     
         first_col_comm);
 
       if(col_rank == 0){
@@ -344,7 +322,6 @@ int main(int argc, char *argv[]){
     
     if (rank == 0){
        for(j=0; j<4; j++){
-      //   printf("NUMERO DI THREAD %d\n", values_block[j]);
          double avg_time = total[j] / 5;
   
          double flops;
@@ -355,16 +332,10 @@ int main(int argc, char *argv[]){
          }
        
          double speedup = serial_time/avg_time;
-    
-      //   printf("\nTempo medio: %f s\n", avg_time);
-     //    printf("FLOPS: %e\n", flops);
-     //    printf("SPEEDUP: %e\n", speedup);
-       
+     
          double efficency = speedup/size;
        
          double error = frobenius_error(Y, Y_serial, m, k);
-
-       //  printf("ERRORE FROBENIUS: %e\n", error);
          
          char filename[50];
          if(m==n){
@@ -378,10 +349,7 @@ int main(int argc, char *argv[]){
        }
     }
 
-/* ============================= */
-/* STAMPA RISULTATO              */
-/* ============================= */
-/*
+   //stampa a schermo del risultato 
     if(rank == 0){
 
        printf("\nRISULTATO Y = A * X:\n");
