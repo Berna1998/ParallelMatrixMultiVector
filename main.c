@@ -80,28 +80,7 @@ int main(int argc, char *argv[]){
 
         serial_time = calculate_performance(A, X, m, n, k, Y_serial);
 
-    /*
-       //------------------------------------------------------------------------------
-        printf("LA MATRICE A E':\n");
-        for(i=0;i<m;i++){
-          for(j=0;j<n;j++){
-            printf("%d ",A[i*n + j]); 
-          }
-          printf("\n");
-        }
-        printf("\n");
-        printf("LA MATRICE X E':\n");
-        for(i=0;i<n;i++){
-          for(j=0;j<k;j++){
-             printf("%d ",X[i*k + j]); 
-          }
-          printf("\n");
-        }   
-        printf("\n");
-    */
-    }
     
-    //DA QUI ---------------------------------------------------
 /* dimensioni locali */
     int M_local = m / dims[0];
     int N_local = n / dims[1];
