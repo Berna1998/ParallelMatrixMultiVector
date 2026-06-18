@@ -82,7 +82,7 @@ __global__ void secondNoShared(float* A, float* X, float* Y, int m, int n, int k
     int row = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (row < m) {
-        //Allocazione dinamica basata sul parametro 'k' effettivo per evitare register spilling
+        //Allocazione dinamica basata sul parametro 'k' effettivo
         //Sfruttiamo i registri per le colonne del multivettore (k <= 32)
         float sum[32]; 
         
@@ -113,30 +113,30 @@ __global__ void secondNoShared(float* A, float* X, float* Y, int m, int n, int k
 }
 
 __global__ void secondShared(float* A, float* X, float* Y, int m, int n, int k, int tileK) {
-    // La shared memory conterrà una porzione ("piastrella") del multivettore X
-    // Dimensione necessaria: tileK * k elementi float
+    //La shared memory conterrà una porzione del multivettore X
+    //Dimensione necessaria: tileK * k elementi float
     extern __shared__ float Xs[];
 
     int row = blockIdx.x * blockDim.x + threadIdx.x;
     int tx = threadIdx.x;
 
-    // Accumulatori locali nei registri del thread
+    //Accumulatori locali nei registri del thread
     float sum[32];
     #pragma unroll
     for (int j = 0; j < k; j++) {
         sum[j] = 0.0f;
     }
 
-    // Iterazione sui blocchi (tile) della dimensione interna N
+    //Iterazione sui blocchi (tile) della dimensione interna N
     int numTiles = (n + tileK - 1) / tileK;
     for (int t = 0; t < numTiles; t++) {
 
-        // 1. CARICAMENTO COALESCENTE IN SHARED MEMORY (Tutti i thread partecipano!)
-        // Dobbiamo caricare una matrice di dimensione (tileK x k)
+        //1. CARICAMENTO COALESCENTE IN SHARED MEMORY (Tutti i thread partecipano!)
+        //Dobbiamo caricare una matrice di dimensione (tileK x k)
         int totalElementsToLoad = tileK * k;
         int threadsInBlock = blockDim.x;
 
-        // Approccio cooperativo: ogni thread carica uno o più elementi distribuiti linearmente
+        //Approccio cooperativo: ogni thread carica uno o più elementi distribuiti linearmente
         for (int i = tx; i < totalElementsToLoad; i += threadsInBlock) {
             int localRowX = i / k; // Riga locale della tile di X (da 0 a tileK-1)
             int localColX = i % k; // Colonna locale di X (da 0 a k-1)
@@ -150,10 +150,10 @@ __global__ void secondShared(float* A, float* X, float* Y, int m, int n, int k, 
             }
         }
 
-        // Sincronizzazione fondamentale: assicurarsi che tutta la tile di X sia caricata
+        //Sincronizzazione fondamentale: assicurarsi che tutta la tile di X sia caricata
         __syncthreads();
 
-        // 2. CALCOLO UTILIZZANDO LA SHARED MEMORY
+        //2. CALCOLO UTILIZZANDO LA SHARED MEMORY
         if (row < m) {
             for (int i = 0; i < tileK; i++) {
                 int k_idx = t * tileK + i;
@@ -170,11 +170,11 @@ __global__ void secondShared(float* A, float* X, float* Y, int m, int n, int k, 
             }
         }
 
-        // Sincronizzazione prima della prossima iterazione per evitare sovrascritture della tile
+        //Sincronizzazione prima della prossima iterazione per evitare sovrascritture della tile
         __syncthreads();
     }
 
-    // 3. SCRITTURA FINALE IN MEMORIA GLOBALE
+    //3. SCRITTURA FINALE IN MEMORIA GLOBALE
     if (row < m) {
         #pragma unroll
         for (int j = 0; j < k; j++) {
@@ -201,14 +201,13 @@ extern "C" void run_kernel(float* A, float* X, float* Y, int m, int n, int k, in
           break;}
        
         case 3:
-            // Chiamata corretta al kernel 1D ottimizzato
             secondNoShared<<<numBlocksSecond, threadsPerBlockSecond>>>(A, X, Y, m, n, k);
             break;
        
         case 4: {
-            // Impostiamo la dimensione della piastrella (tileK). Usiamo 32 per un warp intero.
+            //Impostiamo la dimensione di tileK. Usiamo 32 per un warp intero.
             int tileK = 32;             
-            // La dimensione della memoria condivisa deve contenere la tile di X (tileK * k)
+            //La dimensione della memoria condivisa deve contenere la tile di X (tileK * k)
             size_t sharedSize = tileK * k * sizeof(float);
             
             secondShared<<<numBlocksSecond, threadsPerBlockSecond, sharedSize>>>(A, X, Y, m, n, k, tileK);
