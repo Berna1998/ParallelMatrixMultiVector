@@ -81,14 +81,14 @@ int main(int argc, char *argv[]){
         serial_time = calculate_performance(A, X, m, n, k, Y_serial);
 
     
-/* dimensioni locali */
+    //dimensioni locali
     int M_local = m / dims[0];
     int N_local = n / dims[1];
 
     int row_start = coords[0] * (m / dims[0]);
     int col_start = coords[1] * (n / dims[1]);
 
-/* aggiustamento resto */
+    //aggiustamento resto
     if(coords[0] == dims[0]-1){
        M_local += m % dims[0];
     }
@@ -160,14 +160,8 @@ int main(int argc, char *argv[]){
        MPI_Recv(A_local, M_local*N_local, MPI_FLOAT, 0, 0, MPI_COMM_WORLD,MPI_STATUS_IGNORE);
     }
 
-/* ============================= */
-/* DISTRIBUZIONE MATRICE X       */
-/* Scatterv sulla prima riga     */
-/* poi broadcast nella colonna   */
-/* ============================= */
-
-/* communicator della prima riga */
-    MPI_Comm first_row_comm;
+    //Da qui inizia la distribuzione del multivettore X --> (Scatterv sulla riga poi broadcast nella colonna
+    MPI_Comm first_row_comm; //comuncatore della prima riga
 
     if(coords[0] == 0){
        MPI_Comm_split(cart_comm, 0, coords[1], &first_row_comm);
@@ -175,13 +169,12 @@ int main(int argc, char *argv[]){
        MPI_Comm_split(cart_comm, MPI_UNDEFINED, coords[1], &first_row_comm);
     }
 
-/* solo i processi della prima riga partecipano */
-    if(coords[0] == 0){
+    if(coords[0] == 0){//partecipano solo i prcessi della prima riga
 
       int *sendcounts = NULL;
       int *displs = NULL;
 
-    /* rank locale nel communicator della prima riga */
+    
       int row_rank;
       MPI_Comm_rank(first_row_comm, &row_rank);
 
@@ -199,23 +192,22 @@ int main(int argc, char *argv[]){
             if(c == p_c - 1)
                 cols += n % dims[1];
 
-            /* numero di float da mandare */
-            sendcounts[c] = cols * k;
+        
+            sendcounts[c] = cols * k; //numero di float da mandare
 
-            /* displacement in float */
             displs[c] = offset;
 
             offset += cols * k;
         }
      }
 
-    /* Scatterv dei blocchi di X */
+      //Scatterv dei blocchi di X
       MPI_Scatterv(
-        X,                 /* send buffer */
+        X,                 
         sendcounts,
         displs,
         MPI_FLOAT,
-        X_local,           /* recv buffer */
+        X_local,           
         N_local * k,
         MPI_FLOAT,
         0, first_row_comm);
@@ -226,23 +218,20 @@ int main(int argc, char *argv[]){
       }
     }
 
-/* broadcast lungo le colonne */
+    //broadcast lungo le colonne
     MPI_Bcast(X_local, N_local * k, MPI_FLOAT, 0, col_comm );
-          
-    //VEDI FINO A QUA--------------------------------------------------
     
-    // Calcolo locale del prodotto
+    //Calcolo locale del prodotto
     double total[] = {0.0, 0.0, 0.0, 0.0};
     int block;
-        
-    /* COPY H2D */
+
+    //copia dei valori dall'Host al device
     cudaMemcpy(d_A, A_local, sizeA, cudaMemcpyHostToDevice);
     cudaMemcpy(d_X, X_local, sizeX, cudaMemcpyHostToDevice);
 
     for(j=0;j<4;j++){
       block = values_block[j];
       for(i = 0; i<6; i++){
-      //PARTE BARRIER MATMUL
          MPI_Barrier(cart_comm);
          double start = MPI_Wtime();
 
