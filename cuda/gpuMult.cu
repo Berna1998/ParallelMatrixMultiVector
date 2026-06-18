@@ -47,9 +47,7 @@ __global__ void firstShared(float* A, float* X, float* Y, int m, int n, int k, i
         else
             As[ty * tileSize + tx] = 0.0f;
 
-        // =========================
-        // Caricamento tile di X
-        // =========================
+        //Caricamento tile di X
         int tiledRowX = t * tileSize + ty;
 
         if (col < k && tiledRowX < n)
@@ -59,9 +57,7 @@ __global__ void firstShared(float* A, float* X, float* Y, int m, int n, int k, i
 
         __syncthreads();
 
-        // =========================
-        // Moltiplicazione tile
-        // =========================
+        //Moltiplicazione tile
         for (int j = 0; j < tileSize; j++) {
             sum += As[ty * tileSize + j] *Xs[j * tileSize + tx];
         }
@@ -69,7 +65,7 @@ __global__ void firstShared(float* A, float* X, float* Y, int m, int n, int k, i
         __syncthreads();
     }
 
-    // Scrittura risultato
+    //Scrittura del risultato
     if (row < m && col < k){
         Y[row * k + col] = sum;
     }
