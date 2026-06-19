@@ -71,8 +71,6 @@ double calculate_performance(float* A, float* X, int m, int n, int k, float* Y) 
     }
     
     qsort(times, REPS, sizeof(double), compare);
-    
-    double best_time = times[0];
 
     double avg_time = total_time / REPS;
   
