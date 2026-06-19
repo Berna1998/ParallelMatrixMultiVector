@@ -72,7 +72,7 @@ __global__ void firstShared(float* A, float* X, float* Y, int m, int n, int k, i
 }
 
 
-//Kernel CUDA: 1 thread = 1 riga di C
+//Kernel CUDA: 1 thread = 1 riga di Y
 __global__ void secondNoShared(float* A, float* X, float* Y, int m, int n, int k) {
     //Ogni thread gestisce una riga specifica di Y
     int row = blockIdx.x * blockDim.x + threadIdx.x;
