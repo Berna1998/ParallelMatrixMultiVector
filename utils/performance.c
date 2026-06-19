@@ -73,13 +73,6 @@ double calculate_performance(float* A, float* X, int m, int n, int k, float* Y) 
     qsort(times, REPS, sizeof(double), compare);
 
     double avg_time = total_time / REPS;
-  
-    double flops;
-    if (avg_time > 1e-12) {
-        flops = (2.0 * m * n * k) / avg_time;
-    } else {
-        flops = 0.0;
-    }
 
     return avg_time;
 }
