@@ -127,15 +127,15 @@ __global__ void secondShared(float* A, float* X, float* Y, int m, int n, int k, 
     int numTiles = (n + tileK - 1) / tileK;
     for (int t = 0; t < numTiles; t++) {
 
-        //1. CARICAMENTO COALESCENTE IN SHARED MEMORY (Tutti i thread partecipano!)
+        //CARICAMENTO COALESCENTE IN SHARED MEMORY (Tutti i thread partecipano!)
         //Dobbiamo caricare una matrice di dimensione (tileK x k)
         int totalElementsToLoad = tileK * k;
         int threadsInBlock = blockDim.x;
 
         //Approccio cooperativo: ogni thread carica uno o più elementi distribuiti linearmente
         for (int i = tx; i < totalElementsToLoad; i += threadsInBlock) {
-            int localRowX = i / k; // Riga locale della tile di X (da 0 a tileK-1)
-            int localColX = i % k; // Colonna locale di X (da 0 a k-1)
+            int localRowX = i / k; //Riga locale della tile di X (da 0 a tileK-1)
+            int localColX = i % k; //Colonna locale di X (da 0 a k-1)
 
             int globalRowX = t * tileK + localRowX;
 
@@ -149,17 +149,15 @@ __global__ void secondShared(float* A, float* X, float* Y, int m, int n, int k, 
         //Sincronizzazione fondamentale: assicurarsi che tutta la tile di X sia caricata
         __syncthreads();
 
-        //2. CALCOLO UTILIZZANDO LA SHARED MEMORY
+        //CALCOLO UTILIZZANDO LA SHARED MEMORY
         if (row < m) {
             for (int i = 0; i < tileK; i++) {
                 int k_idx = t * tileK + i;
                 if (k_idx < n) {
-                    //Accesso coalescente alla memoria globale per la matrice A
                     float a_val = A[row * n + k_idx];
 
                     #pragma unroll
                     for (int j = 0; j < k; j++) {
-                        // Accesso rapido alla Shared Memory senza Bank Conflict distruttivi
                         sum[j] += a_val * Xs[i * k + j];
                     }
                 }
@@ -170,7 +168,7 @@ __global__ void secondShared(float* A, float* X, float* Y, int m, int n, int k, 
         __syncthreads();
     }
 
-    //3. SCRITTURA FINALE IN MEMORIA GLOBALE
+    //SCRITTURA FINALE IN MEMORIA GLOBALE
     if (row < m) {
         #pragma unroll
         for (int j = 0; j < k; j++) {
