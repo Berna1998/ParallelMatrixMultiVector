@@ -24,19 +24,6 @@ void prodotto_seriale(float* A, float* X, int m, int n, int k, float* Y){
         }
       }
     }
-
-}
-
-//Funzione matmul: prodotto matrice-vettore/matrice
-void matmul(float* A, float* X, float* Y, int M, int N, int K){
-    for(int i=0; i<M; i++){
-        for(int j=0; j<K; j++){
-            Y[i*K + j] = 0;
-            for(int k=0; k<N; k++){
-                Y[i*K + j] += A[i*N + k] * X[k*K + j];
-            }
-        }
-    }
 }
 
 double frobenius_error(float* Y, float* Y_serial, int m, int k) {
