@@ -88,9 +88,7 @@ __global__ void secondNoShared(float* A, float* X, float* Y, int m, int n, int k
         }
 
         //Loop sulla dimensione interna (colonne di A / righe di X)
-        //Questo ciclo permette l'accesso coalescente ad A da parte del warp
         for (int i = 0; i < n; i++) {
-            //COALESCED ACCESS: Thread adiacenti caricano elementi adiacenti sulla stessa colonna 'i'
             float a_val = A[row * n + i];
 
             //Aggiorna gli accumulatori per tutte le k colonne del multivettore
@@ -127,7 +125,7 @@ __global__ void secondShared(float* A, float* X, float* Y, int m, int n, int k, 
     int numTiles = (n + tileK - 1) / tileK;
     for (int t = 0; t < numTiles; t++) {
 
-        //CARICAMENTO COALESCENTE IN SHARED MEMORY (Tutti i thread partecipano!)
+    
         //Dobbiamo caricare una matrice di dimensione (tileK x k)
         int totalElementsToLoad = tileK * k;
         int threadsInBlock = blockDim.x;
