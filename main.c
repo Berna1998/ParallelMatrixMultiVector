@@ -64,8 +64,6 @@ int main(int argc, char *argv[]){
     
    
     if(rank == 0){
- 
-        int z=0;
 
         Y_serial = calloc(m*k, sizeof(float));
 
