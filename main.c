@@ -12,7 +12,7 @@ int main(int argc, char *argv[]){
 
     int m,n;
     int k;
-    int i,j,p;
+    int i,j;
     float* A = NULL;
     float* X = NULL;
     float* Y_serial = NULL;
@@ -22,7 +22,6 @@ int main(int argc, char *argv[]){
 
     double serial_time;
     
-    int z=0;
     m = atoi(argv[1]);
     n = atoi(argv[2]);
     k = atoi(argv[3]);
@@ -82,9 +81,6 @@ int main(int argc, char *argv[]){
     //dimensioni locali
     int M_local = m / dims[0];
     int N_local = n / dims[1];
-
-    int row_start = coords[0] * (m / dims[0]);
-    int col_start = coords[1] * (n / dims[1]);
 
     //aggiustamento resto
     if(coords[0] == dims[0]-1){
@@ -330,8 +326,6 @@ int main(int argc, char *argv[]){
          }
        
          double speedup = serial_time/avg_time;
-     
-         double efficency = speedup/size;
        
          double error = frobenius_error(Y, Y_serial, m, k);
          
