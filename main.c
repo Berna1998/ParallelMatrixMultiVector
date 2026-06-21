@@ -76,7 +76,7 @@ int main(int argc, char *argv[]){
         genera_matrice(X, n, k);
 
         serial_time = calculate_performance(A, X, m, n, k, Y_serial);
-
+    }
     
     //dimensioni locali
     int M_local = m / dims[0];
